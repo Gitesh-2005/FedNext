@@ -5,11 +5,11 @@
 [![Tests](https://img.shields.io/badge/tests-24%20passed-brightgreen.svg)](#validation)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 
-FedNext is a federated Shakespeare text-generation project. It trains a shared LSTM language model across many client partitions without centralizing raw text. The current pipeline supports **Non-IID client splits**, **FedAvg**, **adaptive aggregation**, and a standalone evaluator that reports **categorical cross-entropy loss**, **perplexity**, **top-N accuracy**, and **word error rate (WER)**.
+FedNext is a federated text-generation project. It trains a shared LSTM language model across many client partitions without centralizing raw text. The current pipeline supports **Non-IID client splits**, **FedAvg**, **adaptive aggregation**, and a standalone evaluator that reports **categorical cross-entropy loss**, **perplexity**, **top-N accuracy**, and **word error rate (WER)**.
 
 ## What’s Included
 
-- Character-level Shakespeare preprocessing
+- Character-level corpus preprocessing
 - Non-IID client generation using a Dirichlet split
 - Federated training with partial participation
 - Multiple aggregation modes: `fedavg`, `adaptive`, `simple`
@@ -44,7 +44,7 @@ FedNext is a federated Shakespeare text-generation project. It trains a shared L
 
 ## Data Flow
 
-1. Download the Shakespeare corpus from Project Gutenberg.
+1. Download the source text corpus.
 2. Preprocess it into per-character client files.
 3. Optionally split clients with a Dirichlet-based Non-IID sampler.
 4. Build a shared vocabulary from all client text.
@@ -62,7 +62,7 @@ The project currently uses a compact character-level LSTM language model:
 - Dropout: 0.1
 - Observed vocabulary size in the current dataset run: 55 tokens
 
-This setup was chosen because character-level modeling fits Shakespeare dialogue better than the earlier word-level setup and converged much faster.
+This setup was chosen because character-level modeling fits the source corpus better than the earlier word-level setup and converged much faster.
 
 ## Training Configuration
 
@@ -88,7 +88,7 @@ The active defaults live in `config/default.yaml`:
 
 ## Dataset Details
 
-Source: Project Gutenberg eBook 100, *The Complete Works of William Shakespeare*.
+Source: Project Gutenberg eBook 100, a public-domain literary corpus.
 
 After preprocessing, the current workspace produced:
 
