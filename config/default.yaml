@@ -1,0 +1,33 @@
+model:
+  vocab_size: 256       # Character-level: lowercase + punctuation
+  embedding_dim: 64
+  hidden_dim: 128
+  num_layers: 1
+  dropout: 0.1
+  seq_len: 40           # Character context window
+
+federation:
+  num_clients: 20         # Number of federated clients (Shakespeare characters)
+  rounds: 20              # Global communication rounds (increased)
+  clients_per_round: 10   # Clients sampled each round (increased from 5)
+  local_epochs: 5         # Local training epochs per round (increased from 3)
+  local_batch_size: 32
+  aggregation_method: adaptive  # options: fedavg, adaptive, simple
+  non_iid: true               # create Non-IID client splits
+  dirichlet_alpha: 0.5        # Dirichlet alpha for label skew when non_iid
+
+training:
+  lr: 0.1               # Higher learning rate for character-level
+  weight_decay: 0.0
+  grad_clip: 1.0
+  seed: 42
+
+data:
+  raw_path: data/raw/shakespeare.txt
+  federation_dir: data/federation/users_split_by_pearsons/
+  test_fraction: 0.1
+  min_samples: 50         # Character sequences: need more samples
+
+logging:
+  level: INFO
+  log_dir: logs/
