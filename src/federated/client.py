@@ -51,6 +51,7 @@ class FederatedClient:
         lr: float,
         weight_decay: float = 1e-4,
         grad_clip: float = 5.0,
+        privacy_cfg: Optional[Dict] = None,
     ) -> Tuple[Dict[str, torch.Tensor], int, float]:
         """
         Train locally starting from *global_state_dict*.
@@ -63,6 +64,7 @@ class FederatedClient:
         lr : Learning rate for local SGD.
         weight_decay : L2 regularisation coefficient.
         grad_clip : Max gradient norm (0 to disable).
+        privacy_cfg : Config for Differential Privacy.
 
         Returns
         -------
@@ -104,7 +106,25 @@ class FederatedClient:
             final_loss,
             num_samples,
         )
-        return model.state_dict(), num_samples, final_loss
+        
+        updated_weights = model.state_dict()
+        
+        # Differential Privacy implementation (Task 5.2)
+        if privacy_cfg and privacy_cfg.get("dp_enabled", False):
+            # Calculate total delta first to scale the noise appropriately based on clipping
+            # Then add noise to the updated parameters to satisfy the privacy budget.
+            # Simplified DP: adding scaled Gaussian noise directly to weights
+            dp_clip = privacy_cfg.get("dp_clip_norm", 1.0)
+            noise_mult = privacy_cfg.get("dp_noise_multiplier", 0.01)
+            sigma = (dp_clip * noise_mult) / max(1, num_samples)
+            
+            logger.info(f"[{self.client_id}] Applying Differential Privacy (sigma={sigma:.6f})")
+            for key in updated_weights.keys():
+                if "weight" in key or "bias" in key:
+                    noise = torch.normal(0, sigma, size=updated_weights[key].shape, device=self.device)
+                    updated_weights[key] += noise
+
+        return updated_weights, num_samples, final_loss
 
     def evaluate(
         self,

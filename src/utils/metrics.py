@@ -8,6 +8,9 @@ from typing import Iterable, List, Optional, Sequence, Tuple
 import matplotlib.pyplot as plt
 import torch
 
+from nltk.translate.bleu_score import sentence_bleu, SmoothingFunction
+from rouge_score import rouge_scorer
+
 
 def safe_perplexity(loss: float) -> float:
     """Convert cross-entropy loss to perplexity, guarding against overflow."""
@@ -35,6 +38,31 @@ def word_error_rate(predictions: torch.Tensor, targets: torch.Tensor) -> float:
     if predictions.dim() > 1:
         predictions = predictions.argmax(dim=-1)
     return float((predictions != targets).float().mean().item())
+
+
+def calculate_bleu(predictions: List[str], references: List[List[str]]) -> float:
+    """Calculate BLEU score with smoothing."""
+    if not predictions or not references:
+        return 0.0
+    chencherry = SmoothingFunction()
+    scores = [sentence_bleu([ref], pred, smoothing_function=chencherry.method1) 
+              for pred, ref in zip(predictions, references)]
+    return sum(scores) / len(scores)
+
+
+def calculate_rouge(predictions: List[str], references: List[str]) -> Tuple[float, float, float]:
+    """Calculate ROUGE (1, 2, L) scores."""
+    if not predictions or not references:
+        return 0.0, 0.0, 0.0
+    scorer = rouge_scorer.RougeScorer(['rouge1', 'rouge2', 'rougeL'], use_stemmer=True)
+    r1, r2, rl = 0.0, 0.0, 0.0
+    for pred, ref in zip(predictions, references):
+        scores = scorer.score(ref, pred)
+        r1 += scores['rouge1'].fmeasure
+        r2 += scores['rouge2'].fmeasure
+        rl += scores['rougeL'].fmeasure
+    n = len(predictions)
+    return r1 / n, r2 / n, rl / n
 
 
 def cross_entropy_from_logits(logits: torch.Tensor, targets: torch.Tensor) -> float:

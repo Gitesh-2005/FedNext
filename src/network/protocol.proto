@@ -1,0 +1,59 @@
+syntax = "proto3";
+
+package federated;
+
+// Service definition for the Federated Learning system
+service FederatedLearning {
+    // Client initially registers to the server to let it know it's available
+    rpc RegisterClient (RegisterRequest) returns (RegisterResponse);
+
+    // Provide the client with the current global weights
+    rpc GetGlobalModel (ModelRequest) returns (ModelResponse);
+
+    // Client uploads local training updates back to the server
+    rpc SendLocalUpdate (LocalUpdateRequest) returns (LocalUpdateResponse);
+}
+
+// ----------------------------------------------------
+// Registration
+// ----------------------------------------------------
+message RegisterRequest {
+    string client_id = 1;
+    int32 sample_count = 2; // Optional: data size known a priori
+}
+
+message RegisterResponse {
+    bool success = 1;
+    string message = 2;
+    int32 current_round = 3;
+}
+
+// ----------------------------------------------------
+// Downloading Global Model
+// ----------------------------------------------------
+message ModelRequest {
+    string client_id = 1;
+}
+
+message ModelResponse {
+    int32 current_round = 1;
+    bytes weights = 2;       // serialized PyTorch weights
+    string metadata = 3;     // JSON config metadata (vocab, etc.)
+}
+
+// ----------------------------------------------------
+// Uploading Local Updates
+// ----------------------------------------------------
+message LocalUpdateRequest {
+    string client_id = 1;
+    int32 training_round = 2;
+    bytes weights = 3;       // serialized PyTorch weights
+    int32 samples_used = 4;
+    float loss = 5;
+    string metrics_json = 6;
+}
+
+message LocalUpdateResponse {
+    bool accepted = 1;
+    string message = 2;
+}

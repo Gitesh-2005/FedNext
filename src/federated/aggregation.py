@@ -124,3 +124,37 @@ def adaptive_federated_average(
             averaged[key] += tensor.float() * (w / total_weight)
 
     return averaged
+
+
+def fed_async(
+    global_weights: Dict[str, torch.Tensor],
+    client_weights: Dict[str, torch.Tensor],
+    staleness: int,
+    base_alpha: float = 0.5,
+    a: int = 10,
+) -> Dict[str, torch.Tensor]:
+    """
+    FedAsync aggregation step: Server updates immediately when a client update arrives.
+    
+    Formula: W_new = (1 - alpha_t) * W_global + alpha_t * W_client
+    where alpha_t = base_alpha / (1 + a * staleness).
+    
+    Parameters
+    ----------
+    global_weights: Current global model state dict.
+    client_weights: Newly arrived client model state dict.
+    staleness: staleness = (current_global_round - client_training_round).
+    base_alpha: the base mixing coefficient.
+    a: staleness penalty scale.
+    """
+    alpha_t = base_alpha / (1.0 + a * staleness)
+    
+    updated: Dict[str, torch.Tensor] = {}
+    for key, g_tensor in global_weights.items():
+        if key in client_weights:
+            c_tensor = client_weights[key]
+            updated[key] = (1.0 - alpha_t) * g_tensor.float() + alpha_t * c_tensor.float()
+        else:
+            updated[key] = g_tensor.clone()
+            
+    return updated

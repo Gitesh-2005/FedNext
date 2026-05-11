@@ -5,6 +5,8 @@ model:
   num_layers: 1
   dropout: 0.1
   seq_len: 40           # Character context window
+  rnn_type: LSTM
+  bidirectional: false
 
 federation:
   num_clients: 20         # Number of federated clients (Shakespeare characters)
@@ -12,9 +14,14 @@ federation:
   clients_per_round: 10   # Clients sampled each round (increased from 5)
   local_epochs: 5         # Local training epochs per round (increased from 3)
   local_batch_size: 32
-  aggregation_method: adaptive  # options: fedavg, adaptive, simple
+  aggregation_method: async  # options: fedavg, adaptive, async
   non_iid: true               # create Non-IID client splits
   dirichlet_alpha: 0.5        # Dirichlet alpha for label skew when non_iid
+
+privacy:
+  dp_enabled: true
+  dp_clip_norm: 1.0       # Max L2 norm for gradient clipping for DP
+  dp_noise_multiplier: 0.01 # Noise multiplier per parameter (sigma)
 
 training:
   lr: 0.1               # Higher learning rate for character-level
